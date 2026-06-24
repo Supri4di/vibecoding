@@ -94,4 +94,19 @@ export async function getCurrentUser(token: string) {
   return user;
 }
 
+export async function logoutUser(token: string): Promise<void> {
+  // Check if session exists
+  const existingSessions = await db
+    .select()
+    .from(sessions)
+    .where(eq(sessions.token, token))
+    .limit(1);
 
+  const session = existingSessions[0];
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+
+  // Delete session from database
+  await db.delete(sessions).where(eq(sessions.token, token));
+}

@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { registerUser, loginUser, getCurrentUser } from "../services/users-service";
+import { registerUser, loginUser, getCurrentUser, logoutUser } from "../services/users-service";
 
 export const usersRoute = new Elysia({ prefix: "/api" })
   .post(
@@ -74,6 +74,32 @@ export const usersRoute = new Elysia({ prefix: "/api" })
         return { error: "Terjadi kesalahan pada server", details: error.message };
       }
     }
+  )
+  .delete(
+    "/users/logout",
+    async ({ headers, set }) => {
+      try {
+        const authHeader = headers["authorization"];
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+
+        const token = authHeader.substring(7);
+        if (!token) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+
+        await logoutUser(token);
+        return { data: "OK" };
+      } catch (error: any) {
+        if (error.message === "Unauthorized") {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+        set.status = 500;
+        return { error: "Terjadi kesalahan pada server", details: error.message };
+      }
+    }
   );
-
-
